@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Funil de Vendas - Brincos de Cerâmica Fria</title>
+   <!-- OTIMIZAÇÃO PAGESPEED: Pré-conexão para fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ 
+  <!-- OTIMIZAÇÃO PAGESPEED: Força a primeira imagem a carregar instantaneamente (LCP) -->
+  <link rel="preload" href="head1.webp" as="image" fetchpriority="high">
+
+  <!-- Tailwind CSS (Adicionado DEFER para não bloquear a renderização e evitar Timeout no Google) -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
+   <!-- Fontes: Inter e Playfair Display -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,900;1,700;1,900&family=Playfair+Display:ital,wght@1,600;1,700;1,800&display=swap" rel="stylesheet">
+
+  <style>
+      body {
+          font-family: 'Inter', sans-serif;
+          background-color: #fdf2f8; /* Rosa Pastel Suave (Tailwind pink-50) */
+          background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.8) 0%, rgba(253, 242, 248, 0) 70%);
+          color: #111827; /* Texto escuro por padrão no modo claro */
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+      }
+
+      .glass-card {
+          background: rgba(255, 255, 255, 0.65); /* Mais opaco para dar leitura */
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.9);
+          border-radius: 1.5rem;
+          box-shadow: 0 15px 35px -10px rgba(190, 24, 93, 0.1); /* Sombra rosada elegante */
+      }
+
+      .blend-image {
+          -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 65%, rgba(0,0,0,0) 100%);
+          mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 65%, rgba(0,0,0,0) 100%);
+      }
+
+      .btn-green {
+          background-color: #10b981;
+          color: white;
+          transition: all 0.2s ease-in-out;
+          box-shadow: 0 8px 15px -5px rgba(16, 185, 129, 0.4);
+      }
+      .btn-green:active, .btn-green:hover { background-color: #059669; transform: scale(0.98); }
+
+      /* OTIMIZAÇÃO DE PERFORMANCE: Animando apenas o Transform (GPU), sem mexer no box-shadow (CPU) */
+      @keyframes pulse-cta {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.04); }
+          100% { transform: scale(1); }
+      }
+      .animate-pulse-cta { animation: pulse-cta 2s infinite ease-in-out; }
+
+      /* OTIMIZAÇÃO DE PERFORMANCE: Usando opacity em vez de repintar o background (CPU) */
+      @keyframes alert-pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.85; }
+          100% { opacity: 1; }
+      }
+      .animate-alert { animation: alert-pulse 1.5s infinite ease-in-out; }
+
+      .quiz-btn {
+          background-color: #ffffff;
+          color: #111827;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          border: 1px solid rgba(0,0,0,0.05);
+      }
+      .quiz-btn:active, .quiz-btn:hover { background-color: #fce7f3; transform: scale(0.98); border-color: #fbcfe8; }
+
+      #progressBarContainer { background-color: rgba(0,0,0,0.1); height: 12px; border-radius: 999px; overflow: hidden; width: 100%; }
+      #progressBarFill { height: 100%; background-color: #10b981; width: 0%; transition: width 0.1s linear; }
+
+      .text-highlight { color: #be123c; } /* Rose Forte / Carmim para contrastar no fundo claro */
+      .font-serif-italic { font-family: 'Playfair Display', serif; font-style: italic; }
+      .hidden { display: none !important; }
+
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+
+      /* Classes para Animação de Scroll */
+      .scroll-fade {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .scroll-fade.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  </style>
+
+  <script>
+  (function () {
+    "use strict";
+    var API_BASE = "https://brain-saas.vercel.app";
+    var PIXEL_PUBLIC_KEY = "px_D7XBCpYqp6dO4nTz";
+    var prefix = ["https://lastlink.com","https://kirvano.com","https://pay.kirvano.com","https://checkout.kirvano.com","pay.yampi.com.br"];
+    var TRACK_URL = API_BASE.replace(/\/$/, "") + "/api/track";
+
+    function getCookie(name) {
+      var match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+
+    function setCookie(name, value, days) {
+      var d = new Date();
+      d.setTime(d.getTime() + (days || 365) * 24 * 60 * 60 * 1000);
+      document.cookie = name + "=" + encodeURIComponent(value) + "; path=/; expires=" + d.toUTCString() + "; SameSite=Lax";
+    }
+
+    function uuid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = (Math.random() * 16) | 0;
+        var v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    function getOrCreateSid() {
+      var sid = getCookie("mcapi_sid");
+      if (!sid) { sid = uuid(); setCookie("mcapi_sid", sid, 365); }
+      return sid;
+    }
+
+    function getQueryParam(name) {
+      try { return new URL(location.href).searchParams.get(name); } catch (e) { return null; }
+    }
+
+    function ensureFbp() {
+      var existing = getCookie("_fbp");
+      if (existing) return existing;
+      var fbp = "fb.1." + Date.now() + "." + Math.floor(Math.random() * 1e16);
+      setCookie("_fbp", fbp, 90);
+      return fbp;
+    }
+
+    function ensureFbc() {
+      var existing = getCookie("_fbc");
+      if (existing) return existing;
+      var fbclid = getQueryParam("fbclid");
+      if (!fbclid) return null;
+      var fbc = "fb.1." + Date.now() + "." + fbclid;
+      setCookie("_fbc", fbc, 90);
+      return fbc;
+    }
+
+    function safeResolveUrl(href) {
+      var resolved = href;
+      try { resolved = new URL(href, location.href).href; } catch (e) {}
+      return resolved;
+    }
+
+    function looksLikeCheckout(url) {
+      url = String(url || "");
+      for (var j = 0; j < prefix.length; j++) {
+        if (url.indexOf(prefix[j]) !== -1) return true;
+      }
+      var low = url.toLowerCase();
+      if (low.indexOf("checkout") !== -1 || low.indexOf("pay") !== -1 || low.indexOf("payment") !== -1) return true;
+      return false;
+    }
+
+    function buildUtms() {
+      var r = new URL(location.href);
+      var sid = getOrCreateSid();
+      var out = {};
+      out.utm_source = r.searchParams.get("utm_source") || "direto";
+      out.utm_term = "sid:" + sid;
+      if (r.searchParams.get("utm_medium")) out.utm_medium = r.searchParams.get("utm_medium");
+      if (r.searchParams.get("utm_campaign")) out.utm_campaign = r.searchParams.get("utm_campaign");
+      if (r.searchParams.get("utm_content")) out.utm_content = r.searchParams.get("utm_content");
+      if (r.searchParams.get("fbclid")) out.fbclid = r.searchParams.get("fbclid");
+      return out;
+    }
+
+    function applyUtmsToUrl(resolvedUrl, utms, forceUtmTerm) {
+      try {
+        var u = new URL(resolvedUrl);
+        for (var key in utms) {
+          if (!utms.hasOwnProperty(key)) continue;
+          if (!utms[key]) continue;
+          if (key === "utm_term") {
+            if (forceUtmTerm) u.searchParams.set("utm_term", utms.utm_term);
+            else if (!u.searchParams.get("utm_term")) u.searchParams.set("utm_term", utms.utm_term);
+            continue;
+          }
+          if (!u.searchParams.get(key)) u.searchParams.set(key, utms[key]);
+        }
+        return u.toString();
+      } catch (e) {
+        return resolvedUrl;
+      }
+    }
+
+    function sendEvent(payload) {
+      try {
+        if (navigator.sendBeacon) {
+          var blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+          navigator.sendBeacon(TRACK_URL, blob);
+          return;
+        }
+      } catch (e) {}
+      fetch(TRACK_URL, { method: "POST", mode: "cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(function(){});
+    }
+
+    function postEvent(eventName) {
+      var sid = getOrCreateSid();
+      var payload = { pixel_id: PIXEL_PUBLIC_KEY, sid: sid, event: eventName, event_id: eventName + "_" + sid + "_" + Date.now(), url: location.href, utm: buildUtms(), fbp: ensureFbp(), fbc: ensureFbc() };
+      sendEvent(payload);
+    }
+
+    function updateLinks() {
+      var utms = buildUtms();
+      var anchors = document.querySelectorAll("a[href]");
+      for (var i = 0; i < anchors.length; i++) {
+        var a = anchors[i];
+        var href = a.getAttribute("href") || "";
+        if (!href) continue;
+        var resolved = safeResolveUrl(href);
+        if (!looksLikeCheckout(resolved)) continue;
+        a.href = applyUtmsToUrl(resolved, utms, true);
+      }
+    }
+
+    function init() {
+      ensureFbp(); updateLinks(); postEvent("PageView");
+      var tries = 0;
+      var t = setInterval(function () { tries++; updateLinks(); if (tries >= 10) clearInterval(t); }, 1000);
+      if (window.MutationObserver) {
+        var mo = new MutationObserver(function () { updateLinks(); });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      var el = e.target;
+      var a = el && el.closest ? el.closest("a") : null;
+      if (!a) return;
+      var href = a.getAttribute("href") || "";
+      if (!href) return;
+      var resolved = safeResolveUrl(href);
+      if (!looksLikeCheckout(resolved)) return;
+      var utms = buildUtms();
+      a.href = applyUtmsToUrl(resolved, utms, true);
+      postEvent("InitiateCheckout");
+    }, true);
+
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); } else { init(); }
+  })();
+  </script>
+</head>
+<body class="w-full min-h-[100dvh] flex justify-center text-center">
+
+  <!-- POPUP DE UPSELL (R$ 27,90) -->
+  <div id="upsellPopup" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+      <div class="bg-white rounded-[2rem] shadow-2xl max-w-[380px] w-full p-8 relative text-gray-900 border-4 border-[#10b981] animate-fade">
+          <h3 class="text-2xl font-black text-gray-900 mb-2 leading-tight text-center">Leve o Pacote Completo!</h3>
+          <p class="text-[13px] text-gray-600 font-medium mb-6 leading-relaxed px-4 text-center">
+              Você escolheu a opção básica, mas por apenas <strong class="text-green-600">R$ 13,00 a mais</strong> você leva TUDO:
+          </p>
+          <div class="bg-gray-50 p-5 rounded-2xl text-left mb-6 space-y-3 shadow-inner">
+              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Aulas em Vídeo Passo a Passo</p>
+              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Apostila Digital Completa</p>
+              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Todos os 3 Bônus Exclusivos</p>
+              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Lista de Fornecedores Secreta</p>
+          </div>
+          <div class="mb-8 text-center">
+              <p class="text-xs text-gray-400 line-through font-bold">De R$ 97,00 por apenas</p>
+              <p class="text-4xl font-black text-gray-900 leading-tight">R$ 27,90</p>
+          </div>
+          <a href="https://pay.yampi.com.br/LINK_VIP_AQUI" class="animate-pulse-cta block w-full py-5 btn-green font-black rounded-2xl text-[1.1rem] uppercase shadow-xl mb-4 text-center">SIM! Quero o Completo por R$ 27,90</a>
+          <a href="https://pay.yampi.com.br/LINK_BASICO_AQUI" class="block text-[11px] text-gray-400 font-bold hover:text-gray-600 transition underline text-center">Não, obrigado. Vou ficar só com a apostila básica por R$ 14,90.</a>
+      </div>
+  </div>
+
+  <div class="w-full max-w-[420px] min-h-[100dvh] flex flex-col items-center px-6 pt-4 pb-8">
+
+      <!-- VIEW 1: LANDING PAGE -->
+      <div id="landingPage" class="w-full flex flex-col items-center animate-fade">
+          <div class="w-full pt-8 pb-2 text-center z-30 relative shrink-0">
+              <p class="text-[12px] font-black tracking-widest uppercase mb-2 text-highlight">APRENDA, VENDA E LUCRE:</p>
+              <h1 class="text-[2.4rem] font-black italic leading-tight tracking-tighter mb-5 text-gray-900">Brincos de Cerâmica Fria</h1>
+              <p class="text-[18px] md:text-[20px] font-bold leading-snug text-gray-800 px-2">
+                  O Plano de Lucro Rápido com <br>
+                  <span class="font-black text-highlight italic tracking-wide uppercase text-[20px] md:text-[22px]">Margem de Joalheria</span> e <br>
+                  <span class="font-serif-italic text-highlight font-black text-[2.2rem] leading-tight block my-2">CUSTO DE CENTAVOS</span>
+                  <span class="text-[15px] font-medium text-gray-600 block mt-3 leading-relaxed">feito na mesa da sua sala, <span class="font-bold underline underline-offset-2 text-gray-800">sem forno</span><br>
+                  e sem precisar de dom artístico!</span>
+              </p>
+          </div>
+          <div class="relative w-full flex justify-center items-center z-20 mt-2 shrink-0">
+              <!-- IMAGEM COM O CAMINHO LOCAL EXATO -->
+              <img src="head1.webp" fetchpriority="high" decoding="async" alt="Brincos de Cerâmica Fria" class="w-[225%] max-w-none h-auto object-contain blend-image">
+          </div>
+          <div class="w-full text-center z-30 -mt-16 flex flex-col items-center shrink-0">
+              <p class="text-[16px] md:text-[18px] font-semibold leading-snug mb-6 px-2 text-gray-800">
+                  Venda <span class="text-highlight font-black text-[18px]">todo dia</span> no WhatsApp com um mostruário direto ao ponto: <br>
+                  <strong class="font-black text-[18px] text-gray-900">15 Modelos Campeões de Vendas</strong>!
+              </p>
+              <button type="button" onclick="showQuiz()" class="animate-pulse-cta w-full py-4 px-6 btn-green text-[1.1rem] font-black rounded-2xl uppercase tracking-wide">QUERO COMEÇAR AGORA</button>
+          </div>
+      </div>
+
+      <!-- VIEW 2: QUIZ P1 -->
+      <div id="quizPage" class="hidden w-full flex-col items-center justify-center animate-fade">
+          <div class="glass-card w-full p-8 text-center mb-8 relative z-30">
+              <h2 class="text-2xl font-black text-gray-900 leading-tight mb-2">Você já trabalha com artesanato ou <span class="text-highlight">trabalhos manuais?</span></h2>
+              <p class="text-gray-500 font-medium text-[14px]">Toque na sua resposta:</p>
+          </div>
+          <div class="w-full space-y-3 z-20">
+              <button onclick="showQuestion2()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl transition-transform active:scale-95"><div class="flex items-center gap-3"><span class="text-2xl">🏆</span><span class="font-bold text-[15px]">Sim, já vendo peças</span></div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion2()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl transition-transform active:scale-95"><div class="flex items-center gap-3"><span class="text-2xl">🎨</span><span class="font-bold text-[15px]">Sim, faço por hobby</span></div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion2()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl transition-transform active:scale-95"><div class="flex items-center gap-3"><span class="text-2xl">🤔</span><span class="font-bold text-[15px]">Não, mas quero aprender!</span></div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion2()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl transition-transform active:scale-95"><div class="flex items-center gap-3"><span class="text-2xl">💸</span><span class="font-bold text-[15px]">Só quero aprender a fazer renda!</span></div><span class="text-highlight font-black text-xl">></span></button>
+          </div>
+      </div>
+
+      <!-- VIEW 3: QUIZ P2 -->
+      <div id="quizCursoPage" class="hidden w-full flex-col items-center justify-center animate-fade">
+          <div class="glass-card w-full p-8 text-center mb-8">
+              <h2 class="text-2xl font-black text-gray-900 leading-tight">Já fez algum curso de cerâmica ou <span class="text-highlight">artesanato?</span></h2>
+          </div>
+          <div class="w-full space-y-3">
+              <button onclick="showQuestion3()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">😅</span> Nunca fiz, será o primeiro</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion3()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">📖</span> Já fiz um curso</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion3()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">🎓</span> Já fiz vários cursos</div><span class="text-highlight font-black text-xl">></span></button>
+          </div>
+      </div>
+
+      <!-- VIEW 4: QUIZ P3 -->
+      <div id="quizTempoPage" class="hidden w-full flex-col items-center justify-center animate-fade">
+          <div class="glass-card w-full p-8 text-center mb-8">
+              <h2 class="text-2xl font-black text-gray-900 leading-tight">Quanto tempo por dia você tem para <span class="text-highlight">se dedicar?</span></h2>
+          </div>
+          <div class="w-full space-y-3">
+              <button onclick="showQuestion4()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">⏳</span> 15 min a 1 hora (extra)</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion4()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">🕒</span> 3 a 4 horas por dia</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion4()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">☀️</span> Tenho o dia todo livre!</div><span class="text-highlight font-black text-xl">></span></button>
+          </div>
+      </div>
+
+      <!-- VIEW 5: QUIZ P4 -->
+      <div id="quizDoresPage" class="hidden w-full flex-col items-center justify-center animate-fade">
+          <div class="glass-card w-full p-8 text-center mb-8">
+              <h2 class="text-2xl font-black text-gray-900 leading-tight">Qual o seu <span class="text-highlight">MAIOR incômodo</span> hoje?</h2>
+          </div>
+          <div class="w-full space-y-3">
+              <button onclick="showQuestion5()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">💸</span> Não sobra dinheiro</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion5()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">😓</span> Rotina cansativa e mal paga</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showQuestion5()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl">🚨</span> Preciso de um extra URGENTE!</div><span class="text-highlight font-black text-xl">></span></button>
+          </div>
+      </div>
+
+      <!-- VIEW 6: QUIZ P5 (ÚLTIMA) -->
+      <div id="quizObjetivoFinalPage" class="hidden w-full flex-col items-center justify-center animate-fade">
+          <div class="glass-card w-full p-8 text-center mb-8">
+              <h2 class="text-2xl font-black text-gray-900 leading-tight">Última: O que você mais espera <span class="text-highlight">das próximas semanas?</span></h2>
+          </div>
+          <div class="w-full space-y-3">
+              <button onclick="showFinalOffer()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl shrink-0">🔥</span> Fazer primeiros R$ 300 no fim de semana!</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showFinalOffer()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl shrink-0">💸</span> Renda extra para pagar contas com folga.</div><span class="text-highlight font-black text-xl">></span></button>
+              <button onclick="showFinalOffer()" class="quiz-btn w-full flex items-center justify-between p-5 rounded-2xl font-bold"><div class="flex items-center gap-3"><span class="text-2xl shrink-0">😍</span> Começar na mesa da sala e ir crescendo.</div><span class="text-highlight font-black text-xl">></span></button>
+          </div>
+      </div>
+
+      <!-- VIEW 8: DIFERENCIAIS DO MÉTODO -->
+      <div id="finalOfferPage" class="hidden w-full flex-col items-center pt-4 pb-8 animate-fade">
+          <div class="glass-card p-6 text-center w-full z-30 relative shrink-0 mb-8 border-t-4 border-t-[#e11d48]">
+              <h2 class="text-2xl font-black leading-tight text-gray-900 uppercase italic tracking-tighter">
+                  Por que este Método <br><span class="text-highlight text-3xl">Vende Todo Dia:</span>
+              </h2>
+          </div>
+         
+          <div class="w-full space-y-4 z-20">
+              <!-- Feature 1: Quebra de Objeção Principal -->
+              <div class="bg-gradient-to-r from-[#10b981] to-[#059669] p-1 rounded-2xl shadow-xl transform -rotate-1">
+                  <div class="bg-white/95 backdrop-blur-md p-4 rounded-xl flex items-start gap-4 h-full">
+                      <div class="text-3xl shrink-0 mt-1">🚫</div>
+                      <div>
+                          <h4 class="font-black text-gray-900 text-[14px] uppercase italic tracking-tight mb-1">Zero Forno ou Equipamento</h4>
+                          <p class="text-[13px] font-bold text-gray-700 leading-snug text-left">Não precisa de forno de alta temperatura. A massa de cerâmica fria seca sozinha ao ar livre na sua bancada!</p>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Feature 2: Agilidade/Custo -->
+              <div class="bg-white/80 backdrop-blur-md border border-white shadow-sm p-5 rounded-2xl text-left relative overflow-hidden">
+                  <div class="absolute top-0 right-0 bg-[#fde047] text-gray-900 text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-wider">Iniciantes</div>
+                  <div class="flex items-start gap-3">
+                      <div class="text-2xl mt-1">✂️</div>
+                      <div>
+                          <h4 class="text-highlight font-black text-[15px] mb-1">Sem horas modelando</h4>
+                          <p class="text-[13px] font-medium text-gray-700 leading-snug">Gabaritos e cortadores já resolvem o formato. É prático e direto ao ponto, não precisa de "dom artístico".</p>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Feature 3: Margem/Lucro -->
+              <div class="bg-white/80 backdrop-blur-md border border-white shadow-sm p-5 rounded-2xl text-left">
+                  <div class="flex items-start gap-3">
+                      <div class="text-2xl mt-1">💰</div>
+                      <div>
+                          <h4 class="text-highlight font-black text-[15px] mb-1">Custo de Centavos</h4>
+                          <p class="text-[13px] font-medium text-gray-700 leading-snug">Produza pagando centavos de material e venda com preço de <strong class="text-gray-900 font-bold">joia premium</strong>.</p>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Feature 4: O Segredo -->
+              <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-white/80 backdrop-blur-md border border-white shadow-sm p-4 rounded-2xl text-center flex flex-col items-center justify-center">
+                      <span class="text-3xl mb-2">🥣</span>
+                      <p class="text-[12px] font-bold text-gray-700 leading-tight"><strong class="text-highlight">Fácil Produção</strong><br>Sem sujeira, basta abrir a massa e cortar!</p>
+                  </div>
+                  <div class="bg-white/80 backdrop-blur-md border border-white shadow-sm p-4 rounded-2xl text-center flex flex-col items-center justify-center">
+                      <span class="text-3xl mb-2">✨</span>
+                      <p class="text-[12px] font-bold text-gray-700 leading-tight"><strong class="text-highlight">Acabamento Fino</strong><br>que fica com cara de cerâmica vitrificada.</p>
+                  </div>
+              </div>
+
+              <!-- Feature 5: Textura e Padrão -->
+              <div class="bg-white/80 backdrop-blur-md border border-white shadow-sm p-5 rounded-2xl text-left">
+                  <div class="flex items-start gap-3 mb-4 pb-4 border-b border-gray-200">
+                      <div class="w-8 h-8 rounded-full bg-[#be185d] flex items-center justify-center text-white font-black shrink-0 border-2 border-white text-sm shadow-sm">⭐</div>
+                      <p class="text-[13px] font-medium text-gray-700 leading-snug"><strong class="text-highlight">Durabilidade e Leveza</strong> (não pesa na orelha e não quebra facilmente, textura profissional).</p>
+                  </div>
+                  <div class="flex items-start gap-3">
+                      <div class="w-8 h-8 rounded-full bg-[#be185d] flex items-center justify-center text-white font-black shrink-0 border-2 border-white text-sm shadow-sm">📱</div>
+                      <p class="text-[13px] font-medium text-gray-700 leading-snug">Padrão Joalheria (Aparência + Embalagem). Você fará peças com <strong class="text-highlight">cara de marca famosa</strong>.</p>
+                  </div>
+              </div>
+          </div>
+
+          <div class="w-full text-center z-30 mt-8 flex flex-col items-center shrink-0">
+              <button onclick="showFinalPage()" class="animate-pulse-cta w-full py-5 px-6 btn-green text-[1.1rem] font-black rounded-xl uppercase tracking-wide shadow-xl">QUERO APRENDER ESSE MÉTODO</button>
+          </div>
+      </div>
+
+      <!-- VIEW 9: PÁGINA DE LUCRO -->
+      <div id="finalPage" class="hidden w-full flex-col items-center pt-4 pb-8 animate-fade text-center">
+          <div class="glass-card p-6 text-center w-full z-30 relative shrink-0 mb-6 border-b-4 border-b-[#e11d48]">
+              <h2 class="text-[2.5rem] font-black leading-tight text-gray-900 italic">A <span class="text-highlight">Matemática</span> do Lucro</h2>
+          </div>
+         
+          <div class="w-full text-center z-30 mt-4 flex flex-col items-center shrink-0">
+              <p class="text-[15px] font-bold mb-6 leading-relaxed text-gray-700 px-4 text-center">
+                  O custo para produzir um brinco artesanal de cerâmica é <strong class="text-highlight">baixíssimo</strong> comparado ao valor de venda. Veja quanto você coloca no bolso:
+              </p>
+
+              <!-- Calculadora Visual -->
+              <div class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-white mb-8 shadow-xl relative">
+                  <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white font-black px-5 py-1.5 rounded-full text-[11px] uppercase tracking-widest shadow-md">LUCRO GARANTIDO</div>
+                 
+                  <div class="flex justify-between items-center border-b border-gray-200 pb-3 mb-3 mt-2">
+                      <span class="text-gray-600 font-medium text-[15px]">Custo Médio (Massa + Ferragem):</span>
+                      <span class="font-bold text-gray-900 text-[16px]">R$ 0,50</span>
+                  </div>
+                  <div class="flex justify-between items-center border-b border-gray-200 pb-3 mb-3">
+                      <span class="text-gray-600 font-medium text-[15px]">Preço de Venda Médio:</span>
+                      <span class="font-bold text-gray-900 text-[16px]">R$ 39,90</span>
+                  </div>
+                  <div class="flex justify-between items-center pt-2">
+                      <span class="font-black text-gray-900 text-[18px] uppercase italic">Lucro Limpo:</span>
+                      <span class="font-black text-highlight text-[24px]">R$ 39,40 <span class="text-[12px] text-gray-500 italic lowercase">/par</span></span>
+                  </div>
+              </div>
+
+              <!-- Projeção Mensal -->
+              <div class="w-full bg-gradient-to-r from-[#10b981] to-[#059669] rounded-[2rem] p-6 mb-8 shadow-xl transform rotate-1 border-2 border-green-300">
+                  <p class="text-white/90 font-black text-[13px] uppercase tracking-widest mb-3">Vendendo APENAS 3 pares por dia:</p>
+                  <p class="text-white font-black text-[3rem] leading-none drop-shadow-md mb-1">R$ 3.546<span class="text-2xl text-white/80">,00</span></p>
+                  <p class="text-white font-black text-[16px] italic">de lucro livre no mês!</p>
+              </div>
+
+              <p class="text-[14px] text-gray-700 font-bold mb-8 leading-relaxed px-5 italic text-center">
+                  Isso mesmo, <span class="text-highlight font-black underline">só 3 peças por dia</span> trabalhando poucas horas na mesa da sua cozinha. Uma margem de lucro gigante!
+              </p>
+
+              <button onclick="showTestimonials()" class="animate-pulse-cta w-full py-5 px-6 btn-green text-[1.1rem] font-black rounded-xl uppercase tracking-wide shadow-xl">EU QUERO ESSA MARGEM</button>
+          </div>
+      </div>
+
+      <!-- VIEW 10: DEPOIMENTOS -->
+      <div id="testimonialsPage" class="hidden w-full flex-col items-center pt-4 pb-8 animate-fade text-center">
+          <div class="glass-card p-6 text-center w-full shrink-0 mb-8"><h2 class="text-2xl font-black mb-1 text-gray-900 uppercase italic tracking-tighter text-center">Quem comprou, aprovou!</h2></div>
+        
+          <div class="w-full space-y-4 mt-8 mb-8 z-20 text-left px-2">
+             
+              <!-- Comentário 1 -->
+              <div class="bg-white text-gray-800 p-4 rounded-xl shadow-md border border-gray-100 flex gap-3 transform -rotate-1 text-left relative">
+                  <div class="w-10 h-10 rounded-full bg-[#d81b60] text-white flex items-center justify-center font-black flex-shrink-0 text-sm shadow-sm">P</div>
+                  <div class="flex-1 pb-3">
+                      <h4 class="font-black text-[13px] text-[#3b5998]">Patrícia Gomes</h4>
+                      <p class="text-[12px] leading-snug text-gray-700 mt-1">Gente, a saída aqui no bairro tá surreal! 😱 Fiz 30 pares de brincos no sábado de manhã e já acabou tudo. O lucro é real!</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-bold">
+                          <span class="cursor-pointer hover:underline">Curtir</span>
+                          <span class="cursor-pointer hover:underline">Responder</span>
+                          <span class="font-normal text-gray-400">2 h</span>
+                      </div>
+                      <div class="absolute bottom-2 right-3 flex items-center bg-white rounded-full shadow-sm border border-gray-200 px-1.5 py-0.5">
+                          <span class="text-[11px] z-10">👍</span>
+                          <span class="text-[11px] -ml-1 z-0">❤️</span>
+                          <span class="text-[10px] ml-1 text-gray-600 font-bold">48</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Comentário 2 -->
+              <div class="bg-white text-gray-800 p-4 rounded-xl shadow-md border border-gray-100 flex gap-3 transform rotate-1 text-left relative">
+                  <div class="w-10 h-10 rounded-full bg-[#3b82f6] text-white flex items-center justify-center font-black flex-shrink-0 text-sm shadow-sm">L</div>
+                  <div class="flex-1 pb-3">
+                      <h4 class="font-black text-[13px] text-[#3b5998]">Luciana M.</h4>
+                      <p class="text-[12px] leading-snug text-gray-700 mt-1">O acabamento vitrificado fica perfeito! Fiz pra mostrar pras minhas amigas e já encomendaram. 😍</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-bold">
+                          <span class="cursor-pointer hover:underline">Curtir</span>
+                          <span class="cursor-pointer hover:underline">Responder</span>
+                          <span class="font-normal text-gray-400">4 h</span>
+                      </div>
+                      <div class="absolute bottom-2 right-3 flex items-center bg-white rounded-full shadow-sm border border-gray-200 px-1.5 py-0.5">
+                          <span class="text-[11px] z-10">❤️</span>
+                          <span class="text-[10px] ml-1 text-gray-600 font-bold">12</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Comentário 3 -->
+              <div class="bg-white text-gray-800 p-4 rounded-xl shadow-md border border-gray-100 flex gap-3 transform -rotate-1 text-left relative">
+                  <div class="w-10 h-10 rounded-full bg-[#10b981] text-white flex items-center justify-center font-black flex-shrink-0 text-sm shadow-sm">A</div>
+                  <div class="flex-1 pb-3">
+                      <h4 class="font-black text-[13px] text-[#3b5998]">Ana Clara</h4>
+                      <p class="text-[12px] leading-snug text-gray-700 mt-1">Eu achava que precisava de forno de alta temperatura caríssimo kkkk 😂 Secar ao ar livre igual ensina no método salvou minha vida!</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-bold">
+                          <span class="cursor-pointer hover:underline">Curtir</span>
+                          <span class="cursor-pointer hover:underline">Responder</span>
+                          <span class="font-normal text-gray-400">5 h</span>
+                      </div>
+                      <div class="absolute bottom-2 right-3 flex items-center bg-white rounded-full shadow-sm border border-gray-200 px-1.5 py-0.5">
+                          <span class="text-[11px] z-10">😆</span>
+                          <span class="text-[11px] -ml-1 z-0">👍</span>
+                          <span class="text-[10px] ml-1 text-gray-600 font-bold">89</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Comentário 4 -->
+              <div class="bg-white text-gray-800 p-4 rounded-xl shadow-md border border-gray-100 flex gap-3 transform rotate-1 text-left relative">
+                  <div class="w-10 h-10 rounded-full bg-[#f59e0b] text-white flex items-center justify-center font-black flex-shrink-0 text-sm shadow-sm">S</div>
+                  <div class="flex-1 pb-3">
+                      <h4 class="font-black text-[13px] text-[#3b5998]">Sandra Silva</h4>
+                      <p class="text-[12px] leading-snug text-gray-700 mt-1">No primeiro fim de semana fiz R$ 450 só vendendo o modelo geométrico terracota. Muito obrigada! 🙏</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-bold">
+                          <span class="cursor-pointer hover:underline">Curtir</span>
+                          <span class="cursor-pointer hover:underline">Responder</span>
+                          <span class="font-normal text-gray-400">12 h</span>
+                      </div>
+                      <div class="absolute bottom-2 right-3 flex items-center bg-white rounded-full shadow-sm border border-gray-200 px-1.5 py-0.5">
+                          <span class="text-[11px] z-10">❤️</span>
+                          <span class="text-[11px] -ml-1 z-0">🥰</span>
+                          <span class="text-[10px] ml-1 text-gray-600 font-bold">156</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Comentário 5 -->
+              <div class="bg-white text-gray-800 p-4 rounded-xl shadow-md border border-gray-100 flex gap-3 transform -rotate-1 text-left relative">
+                  <div class="w-10 h-10 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center font-black flex-shrink-0 text-sm shadow-sm">J</div>
+                  <div class="flex-1 pb-3">
+                      <h4 class="font-black text-[13px] text-[#3b5998]">Juliana R.</h4>
+                      <p class="text-[12px] leading-snug text-gray-700 mt-1">Os brincos de cerâmica viraram febre aqui no condomínio. Todo dia me pedem um formato novo. O lucro é surreal de bom!</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-bold">
+                          <span class="cursor-pointer hover:underline">Curtir</span>
+                          <span class="cursor-pointer hover:underline">Responder</span>
+                          <span class="font-normal text-gray-400">1 d</span>
+                      </div>
+                      <div class="absolute bottom-2 right-3 flex items-center bg-white rounded-full shadow-sm border border-gray-200 px-1.5 py-0.5">
+                          <span class="text-[11px] z-10">👍</span>
+                          <span class="text-[11px] -ml-1 z-0">😲</span>
+                          <span class="text-[10px] ml-1 text-gray-600 font-bold">34</span>
+                      </div>
+                  </div>
+              </div>
+
+          </div>
+          <button onclick="showLoadingPage()" class="w-full py-5 px-6 btn-green text-[1.1rem] font-black rounded-xl uppercase tracking-wide shadow-xl">QUERO OS MESMOS RESULTADOS</button>
+      </div>
+
+      <!-- VIEW 11: LOADING PROFISSIONAL -->
+      <div id="loadingPage" class="hidden w-full flex-col items-center justify-center min-h-[85dvh] animate-fade">
+          <div class="glass-card p-10 text-center w-full border-2 border-white">
+              <div class="w-20 h-20 mx-auto mb-6 bg-white/80 rounded-full flex items-center justify-center border border-gray-200 shadow-md"><span class="text-4xl animate-pulse">✨</span></div>
+              <h2 class="text-2xl font-black mb-8 text-gray-900 text-center leading-tight">Montando seu plano...</h2>
+              <div id="progressBarContainer" class="mb-8 border border-gray-200 shadow-inner"><div id="progressBarFill"></div></div>
+              <div id="loadingItems" class="text-left space-y-4 text-[13px] text-gray-700 font-medium italic text-left"></div>
+          </div>
+      </div>
+
+      <!-- VIEW 12: CHECKOUT FINAL -->
+      <div id="finalCheckoutPage" class="hidden w-full flex-col animate-fade pb-10">
+          <div class="bg-white rounded-[2rem] p-6 text-center w-full mb-6 shadow-sm border border-gray-100 text-center">
+              <h2 class="text-2xl font-black text-gray-900 mb-2 leading-tight">Seu plano está pronto!<br><span class="text-highlight uppercase text-sm tracking-widest">Leia com ATENÇÃO</span></h2>
+              <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto my-4 shadow-md border-2 border-white">
+                  <span class="text-white text-2xl font-black">✓</span>
+              </div>
+              <p class="text-[14px] text-gray-700 font-medium leading-relaxed text-center px-2 italic uppercase tracking-tighter">Parabéns! Você está qualificada para a turma <strong class="text-highlight italic uppercase">Brincos Lucrativos!</strong></p>
+          </div>
+
+          <div class="bg-white rounded-[2rem] p-6 mb-6 shadow-xl border border-gray-100 text-gray-900 text-left relative overflow-hidden">
+              <div class="absolute top-0 right-0 bg-yellow-400 text-gray-900 text-[10px] font-black px-4 py-1.5 rounded-bl-xl uppercase tracking-widest">Acesso Imediato</div>
+             
+              <h3 class="text-[17px] font-black mb-5 leading-tight text-center">Tudo que você vai receber no<br>Método <span class="text-highlight">Brincos de Cerâmica Fria:</span></h3>
+             
+              <ul class="space-y-3 text-[13px] font-bold text-gray-700">
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Vídeo Aulas em Alta Resolução (Passo a passo prático)</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>O Segredo da <span class="text-highlight">Modelagem Rápida</span> e Secagem Perfeita</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Modelos Exclusivos: <span class="text-highlight">15 Formatos Campeões</span> de Venda</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Técnica de Acabamento para aspecto de vitrificado</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Roteiro de Vendas: Como esgotar seu estoque no Instagram</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Script Copia e Cola para vender muito no WhatsApp</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Calculadora Automática: Saiba o centavo exato do seu lucro</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Acesso Vitalício + Suporte VIP para dúvidas</span></li>
+                  <li class="flex gap-3 items-start"><span class="text-green-600 text-lg leading-none">✓</span> <span>Lindo Certificado de Conclusão Oficial</span></li>
+              </ul>
+             
+              <div class="mt-6 pt-5 border-t border-gray-100 text-center">
+                  <p class="text-[13px] font-black text-gray-800 uppercase tracking-tighter italic">Transforme sua mesa em uma<br><span class="text-green-600 text-[16px]">Fábrica de Dinheiro hoje mesmo.</span></p>
+              </div>
+          </div>
+
+          <!-- GRID DE RESULTADOS (PROVA VISUAL) COM CAMINHOS LOCAIS -->
+          <div class="w-full mb-10 z-20">
+              <h3 class="text-gray-900 font-black text-center text-[18px] mb-5 uppercase tracking-tighter italic">
+                  Você vai aprender a fazer <br><span class="text-highlight text-[22px]">essas obras de arte:</span>
+              </h3>
+              <div class="grid grid-cols-2 gap-3">
+                  <img src="imagem2.webp" alt="Brinco 1" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 100ms;">
+                  <img src="imagem3.webp" alt="Brinco 2" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 200ms;">
+                  <img src="imagem4.webp" alt="Brinco 3" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 300ms;">
+                  <img src="imagem5.webp" alt="Brinco 4" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 400ms;">
+                  <img src="imagem6.webp" alt="Brinco 5" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 500ms;">
+                  <img src="imagem7.webp" alt="Brinco 6" loading="lazy" decoding="async" class="scroll-fade w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-200" style="transition-delay: 600ms;">
+              </div>
+          </div>
+
+          <!-- BÔNUS (DESIGN PREMIUM) -->
+          <div class="w-full mb-12 z-20">
+              <h3 class="text-gray-900 font-black text-center text-[20px] mb-2 uppercase tracking-tighter italic">
+                  E não para por aí...
+              </h3>
+              <p class="text-[14px] text-gray-700 font-medium text-center mb-6 px-3 leading-relaxed">
+                  Garantindo sua vaga <strong class="text-highlight">hoje</strong>, vou liberar <span class="font-black text-green-600">R$ 153,00 em Bônus Exclusivos</span> 100% de graça:
+              </p>
+
+              <div class="space-y-5 text-left px-1">
+                  <!-- Bonus 1 -->
+                  <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #01</div>
+                      <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Pack Canva: Tags e Embalagens</h4>
+                      <p class="text-[13px] text-gray-600 leading-relaxed mb-5">Templates prontos e profissionais para você colocar sua marca e agregar valor ao brinco. Pareça uma marca gigante desde o seu primeiro dia de vendas.</p>
+                      <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <span class="text-[11px] font-bold text-gray-400 line-through">De R$ 67,00 por</span>
+                          <span class="text-[15px] font-black text-green-600 uppercase tracking-wide">Grátis</span>
+                      </div>
+                  </div>
+
+                  <!-- Bonus 2 -->
+                  <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #02</div>
+                      <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Script de Vendas p/ WhatsApp</h4>
+                      <p class="text-[13px] text-gray-600 leading-relaxed mb-5">O texto persuasivo exato para mandar nos grupos do condomínio, família e clientes. É só copiar, colar e ver os pedidos chegando.</p>
+                      <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <span class="text-[11px] font-bold text-gray-400 line-through">De R$ 47,00 por</span>
+                          <span class="text-[15px] font-black text-green-600 uppercase tracking-wide">Grátis</span>
+                      </div>
+                  </div>
+
+                  <!-- Bonus 3 -->
+                  <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #03</div>
+                      <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Calculadora Automática de Lucro</h4>
+                      <p class="text-[13px] text-gray-600 leading-relaxed mb-5">Chega de perder dinheiro chutando preço. Coloque o valor que você pagou nos materiais e a planilha te diz o preço de venda na hora.</p>
+                      <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <span class="text-[11px] font-bold text-gray-400 line-through">De R$ 39,00 por</span>
+                          <span class="text-[15px] font-black text-green-600 uppercase tracking-wide">Grátis</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <h3 class="text-gray-900 font-black text-center text-[18px] mb-6 uppercase tracking-wider italic text-center">ESCOLHA SEU PLANO E COMECE AGORA</h3>
+
+          <!-- PLANO VIP (R$ 27,90) -->
+          <div class="bg-white border-[4px] border-[#10b981] rounded-[2rem] p-6 mb-6 relative shadow-xl text-gray-900 text-left transform hover:scale-[1.02] transition-transform duration-300">
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#10b981] text-white font-black px-6 py-1.5 rounded-full text-[12px] uppercase shadow-md tracking-wider">MAIS VENDIDO</div>
+             
+              <h4 class="text-[19px] font-black text-center mt-3 uppercase italic tracking-tighter text-gray-900">CURSO COMPLETO (VÍDEO + E-BOOK)</h4>
+             
+              <div class="space-y-3 my-6 font-bold text-gray-700 text-[13px] text-left px-1">
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Vídeo Aulas Passo a Passo</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>O Segredo do Acabamento Fino</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>15 Modelos Campeões de Venda</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Lista de Fornecedores Secreta (Bônus)</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Pack Canva de Embalagens (Bônus)</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Script de Vendas p/ Whats (Bônus)</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Suporte VIP para dúvidas</span></p>
+                  <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Certificado de Conclusão Oficial</span></p>
+              </div>
+             
+              <div class="text-center mb-6">
+                  <p class="text-[13px] text-gray-400 line-through font-bold mb-1">de R$ 197,00 por</p>
+                  <div class="flex items-center justify-center gap-1">
+                      <span class="text-3xl font-black text-gray-900 self-start mt-1">R$</span>
+                      <span class="text-[4rem] font-black text-gray-900 leading-none tracking-tighter">27<span class="text-4xl">,90</span></span>
+                  </div>
+                  <p id="countdown1" class="text-red-600 font-black text-[11px] mt-3 uppercase italic tracking-wider">Desconto válido por: 01:43</p>
+              </div>
+             
+              <a href="https://pay.yampi.com.br/SEU_LINK_VIP_AQUI" class="animate-pulse-cta block w-full py-5 bg-[#10b981] text-white font-black rounded-2xl text-center uppercase tracking-wider shadow-lg text-[1.15rem] italic hover:bg-[#059669] transition-colors">QUERO O PACOTE COMPLETO</a>
+             
+              <!-- Elementos de Segurança -->
+              <div class="mt-5 flex flex-col items-center justify-center">
+                  <div class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                      <span>🔒 Compra 100% Segura</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-2xl grayscale opacity-50">
+                      <span title="PIX">💠</span>
+                      <span title="Cartão de Crédito">💳</span>
+                      <span title="Boleto">📄</span>
+                  </div>
+              </div>
+          </div>
+
+          <!-- PLANO BÁSICO (R$ 14,90) - ESTRATÉGIA DE CONTRASTE -->
+          <div class="bg-white rounded-[2rem] p-6 mb-4 shadow-md border-2 border-gray-100 text-gray-900 text-left">
+              <h4 class="text-[16px] font-black text-center italic uppercase tracking-tighter text-gray-800">APOSTILA DIGITAL (E-BOOK)</h4>
+             
+              <div class="space-y-2.5 my-5 font-bold text-[12px] text-left px-1">
+                  <p class="flex items-start gap-2 text-gray-800"><span class="text-green-500 text-base leading-none">✔</span> <span>Apenas Apostila Digital em Texto</span></p>
+                  <p class="flex items-start gap-2 text-gray-400 line-through"><span class="text-red-500 text-base leading-none">✗</span> <span>Vídeo Aulas Passo a Passo</span></p>
+                  <p class="flex items-start gap-2 text-gray-400 line-through"><span class="text-red-500 text-base leading-none">✗</span> <span>Todos os 3 Bônus Extras</span></p>
+                  <p class="flex items-start gap-2 text-gray-400 line-through"><span class="text-red-500 text-base leading-none">✗</span> <span>Lista Secreta de Fornecedores</span></p>
+                  <p class="flex items-start gap-2 text-gray-400 line-through"><span class="text-red-500 text-base leading-none">✗</span> <span>Suporte VIP para Dúvidas</span></p>
+                  <p class="flex items-start gap-2 text-gray-400 line-through"><span class="text-red-500 text-base leading-none">✗</span> <span>Certificado de Conclusão</span></p>
+              </div>
+             
+              <div class="flex items-center justify-between gap-4 mt-4 border-t border-gray-100 pt-5">
+                  <span class="text-[28px] font-black text-gray-800 tracking-tighter">R$ 14,90</span>
+                  <button onclick="showUpsellPopup()" class="px-5 py-3 bg-gray-50 text-gray-500 font-black text-[11px] rounded-xl uppercase hover:bg-gray-100 transition-colors shadow-sm border border-gray-200 tracking-wider">COMPRAR BÁSICO</button>
+              </div>
+          </div>
+
+          <!-- TIMER DE ALERTA -->
+          <div class="animate-alert w-full p-4 rounded-2xl mb-8 text-white text-center shadow-lg border-2 border-red-400 text-center">
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-1 text-center text-gray-800">⚠️ ATENÇÃO: Oferta Expirando</p>
+              <h3 class="text-2xl font-black tracking-tighter text-center text-red-600" id="countdown2">03:00</h3>
+              <p class="text-[9px] font-bold opacity-90 mt-1 uppercase italic text-center text-gray-700">Esta é a última chance de levar o plano com desconto!</p>
+          </div>
+
+          <!-- PERGUNTAS FREQUENTES (FAQ) -->
+          <div class="w-full text-left mb-10 z-20">
+              <h3 class="text-gray-900 font-black text-center text-[18px] mb-5 uppercase tracking-tighter italic">Dúvidas Frequentes:</h3>
+              <div class="space-y-3">
+                  <div class="bg-white border border-gray-100 shadow-sm p-4 rounded-2xl">
+                      <h4 class="font-black text-[13px] text-gray-900 mb-1">Como vou receber o material?</h4>
+                      <p class="text-[12px] font-medium text-gray-600 leading-snug">Imediatamente após o pagamento, você receberá um e-mail com seu login e senha para acessar a plataforma oficial.</p>
+                  </div>
+                  <div class="bg-white border border-gray-100 shadow-sm p-4 rounded-2xl">
+                      <h4 class="font-black text-[13px] text-gray-900 mb-1">Nunca fiz artesanato, vou conseguir?</h4>
+                      <p class="text-[12px] font-medium text-gray-600 leading-snug">Com certeza! O método foi criado justamente para quem está começando do absoluto zero e não sabe desenhar. Tudo passo a passo.</p>
+                  </div>
+                  <div class="bg-white border border-gray-100 shadow-sm p-4 rounded-2xl">
+                      <h4 class="font-black text-[13px] text-gray-900 mb-1">Posso pagar no PIX?</h4>
+                      <p class="text-[12px] font-medium text-gray-600 leading-snug">Sim! O pagamento via PIX é aprovado na hora e você já recebe o acesso no mesmo minuto no seu e-mail.</p>
+                  </div>
+              </div>
+          </div>
+
+          <!-- GARANTIA -->
+          <div class="flex flex-col items-center justify-center mb-10 text-center">
+              <img src="selo-garantia.webp" loading="lazy" decoding="async" class="w-40 mb-3 text-center" alt="Garantia de 7 Dias" onerror="this.style.display='none'">
+              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest text-center italic">Garantia incondicional de 7 dias. Seu risco é zero.</p>
+          </div>
+
+          <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-full py-5 btn-green font-black rounded-[2rem] uppercase tracking-wide shadow-xl mb-10 text-lg italic text-center">Quero lucrar neste verão!</button>
+
+          <!-- BIO DA CRIADORA -->
+          <div class="glass-card p-8 mb-10 text-center border border-white text-center">
+              <h4 class="text-highlight font-serif-italic text-3xl mb-4 italic leading-none text-center">Mariana -</h4>
+              <p class="text-[14px] leading-relaxed font-bold text-gray-700 px-2 mb-6 italic text-center">Criadora do Treinamento Brincos de Cerâmica Fria, artesã e especialista em joalharia contemporânea.<br><br>Percebi o potencial incrível que a cerâmica fria tem para gerar renda altíssima com quase zero investimento de material. ✨</p>
+              <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-full py-4 bg-white text-[#be123c] font-black rounded-2xl uppercase text-[12px] shadow-sm tracking-widest italic text-center border border-gray-200">Quero viver trabalhando de casa!</button>
+          </div>
+      </div> <!-- FIM FINAL CHECKOUT PAGE -->
+
+  </div> <!-- FIM WRAPPER PRINCIPAL -->
+
+  <script>
+      const ALL_VIEWS = ['landingPage', 'quizPage', 'quizCursoPage', 'quizTempoPage', 'quizDoresPage', 'quizObjetivoFinalPage', 'finalOfferPage', 'finalPage', 'testimonialsPage', 'loadingPage', 'finalCheckoutPage'];
+    
+      function hideAllViews() {
+          ALL_VIEWS.forEach(id => {
+              const el = document.getElementById(id);
+              if(el) {
+                  el.classList.add('hidden');
+                  el.classList.remove('flex');
+              }
+          });
+      }
+
+      function showView(viewId) {
+          hideAllViews();
+          const view = document.getElementById(viewId);
+          if (view) {
+              view.classList.remove('hidden');
+              view.classList.add('flex');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+      }
+    
+      function showQuiz() { showView('quizPage'); }
+      function showQuestion2() { showView('quizCursoPage'); }
+      function showQuestion3() { showView('quizTempoPage'); }
+      function showQuestion4() { showView('quizDoresPage'); }
+      function showQuestion5() { showView('quizObjetivoFinalPage'); }
+      function showFinalOffer() { showView('finalOfferPage'); }
+      function showFinalPage() { showView('finalPage'); }
+      function showTestimonials() { showView('testimonialsPage'); }
+
+      function showUpsellPopup() { document.getElementById('upsellPopup').classList.remove('hidden'); }
+      function closeUpsell() { document.getElementById('upsellPopup').classList.add('hidden'); }
+
+      function startTimer() {
+          let duration1 = 103;
+          let duration2 = 180;
+          const display1 = document.getElementById('countdown1');
+          const display2 = document.getElementById('countdown2');
+          const timer = setInterval(() => {
+              let min1 = parseInt(duration1 / 60, 10);
+              let sec1 = parseInt(duration1 % 60, 10);
+              min1 = min1 < 10 ? "0" + min1 : min1;
+              sec1 = sec1 < 10 ? "0" + sec1 : sec1;
+              if(display1) display1.textContent = "Desconto válido por: " + min1 + ":" + sec1;
+            
+              let min2 = parseInt(duration2 / 60, 10);
+              let sec2 = parseInt(duration2 % 60, 10);
+              min2 = min2 < 10 ? "0" + min2 : min2;
+              sec2 = sec2 < 10 ? "0" + sec2 : sec2;
+              if(display2) display2.textContent = min2 + ":" + sec2;
+
+              if (duration1 <= 0 && duration2 <= 0) { clearInterval(timer); }
+              if (duration1 > 0) duration1--;
+              if (duration2 > 0) duration2--;
+          }, 1000);
+      }
+
+      function startProgressBar() {
+          const fill = document.getElementById('progressBarFill');
+          const itemsCont = document.getElementById('loadingItems');
+          const items = [
+              "Separando moldes e gabaritos...",
+              "Adicionando 15 Modelos Campeões...",
+              "Liberando Fornecedores Secretos...",
+              "Configurando Script de Vendas no WhatsApp...",
+              "Gerando Certificado Oficial.."
+          ];
+          itemsCont.innerHTML = '';
+          let pct = 0; let itemIdx = 0;
+          const interval = setInterval(() => {
+              pct += 1.5;
+              if(pct >= 100) {
+                  pct = 100;
+                  clearInterval(interval);
+                  setTimeout(() => { showView('finalCheckoutPage'); startTimer(); }, 600);
+              }
+              fill.style.width = `${pct}%`;
+              if(pct >= (itemIdx * 20) && itemIdx < items.length) {
+                  const d = document.createElement('div');
+                  d.className = 'flex items-center text-gray-700 animate-fade justify-between border-b border-gray-200 pb-2';
+                  d.innerHTML = `<span>${items[itemIdx]}</span> <span class="text-[#10b981] font-black text-xl">✔</span>`;
+                  itemsCont.appendChild(d); itemIdx++;
+              }
+          }, 70);
+      }
+
+      function showLoadingPage() { showView('loadingPage'); startProgressBar(); }
+     
+      document.addEventListener('DOMContentLoaded', () => {
+          showView('landingPage');
+         
+          // Olheiro de Scroll (Intersection Observer) para ativar as animações na hora certa
+          const observer = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                  if (entry.isIntersecting) {
+                      entry.target.classList.add('is-visible');
+                      observer.unobserve(entry.target); // Faz animar apenas a primeira vez que passa
+                  }
+              });
+          }, { threshold: 0.15 });
+
+          document.querySelectorAll('.scroll-fade').forEach(el => {
+              observer.observe(el);
+          });
+      });
+  </script>
+</body>
+</html>
