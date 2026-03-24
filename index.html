@@ -260,25 +260,29 @@
 </head>
 <body class="w-full min-h-[100dvh] flex justify-center text-center">
 
-  <!-- POPUP DE UPSELL (R$ 27,90) -->
+  <!-- POPUP DE UPSELL -->
   <div id="upsellPopup" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
       <div class="bg-white rounded-[2rem] shadow-2xl max-w-[380px] w-full p-8 relative text-gray-900 border-4 border-[#10b981] animate-fade">
           <h3 class="text-2xl font-black text-gray-900 mb-2 leading-tight text-center">Acelere seus Resultados!</h3>
-          <p class="text-[13px] text-gray-600 font-medium mb-6 leading-relaxed px-4 text-center">
-              Você escolheu a opção básica, mas por apenas <strong class="text-green-600">R$ 13,00 a mais</strong> você leva o KIT COMPLETO:
+          <p class="text-[13px] text-gray-600 font-medium mb-2 leading-relaxed px-4 text-center">
+              Você escolheu a opção básica, mas por apenas <strong class="text-green-600">R$ 10,00 a mais</strong> você leva o KIT COMPLETO:
           </p>
-          <div class="bg-gray-50 p-5 rounded-2xl text-left mb-6 space-y-3 shadow-inner">
-              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ 15 Gabaritos Prontos (Para Imprimir)</p>
-              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Vídeos Práticos (Só o que importa)</p>
-              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Calculadora de Lucro Automática</p>
-              <p class="flex items-center gap-3 text-[13px] font-bold text-gray-700 leading-tight text-left">✔ Lista de Fornecedores Secreta</p>
+          
+          <!-- ESPAÇO PARA MOCKUP DO VIP NO UPSELL -->
+          <img src="mockup-vip.webp" onerror="this.onerror=null;this.src='https://placehold.co/500x350/10b981/white?text=Sua+Imagem:+mockup-vip.webp'" alt="Mockup VIP" class="w-full h-auto drop-shadow-lg mx-auto mb-4 scale-105">
+
+          <div class="bg-gray-50 p-4 rounded-2xl text-left mb-6 space-y-2 shadow-inner">
+              <p class="flex items-center gap-3 text-[12px] font-bold text-gray-700 leading-tight text-left">✔ 15 Gabaritos Prontos (Para Imprimir)</p>
+              <p class="flex items-center gap-3 text-[12px] font-bold text-gray-700 leading-tight text-left">✔ Vídeos Práticos (Só o que importa)</p>
+              <p class="flex items-center gap-3 text-[12px] font-bold text-gray-700 leading-tight text-left">✔ Calculadora de Lucro Automática</p>
+              <p class="flex items-center gap-3 text-[12px] font-bold text-gray-700 leading-tight text-left">✔ Lista de Fornecedores Secreta</p>
           </div>
-          <div class="mb-8 text-center">
+          <div class="mb-6 text-center">
               <p class="text-xs text-gray-400 line-through font-bold">De R$ 97,00 por apenas</p>
-              <p class="text-4xl font-black text-gray-900 leading-tight">R$ 27,90</p>
+              <p class="text-4xl font-black text-gray-900 leading-tight">R$ 27,00</p>
           </div>
-          <a href="https://pay.yampi.com.br/LINK_VIP_AQUI" class="animate-pulse-cta block w-full py-5 btn-green font-black rounded-2xl text-[1.1rem] uppercase shadow-xl mb-4 text-center">SIM! Quero o Kit VIP por R$ 27,90</a>
-          <a href="https://pay.yampi.com.br/LINK_BASICO_AQUI" class="block text-[11px] text-gray-400 font-bold hover:text-gray-600 transition underline text-center">Não, obrigado. Vou ficar só com o guia inicial por R$ 14,90.</a>
+          <a href="https://pay.yampi.com.br/LINK_VIP_AQUI" class="animate-pulse-cta block w-full py-4 btn-green font-black rounded-2xl text-[1.1rem] uppercase shadow-xl mb-4 text-center">SIM! Quero o Kit VIP por R$ 27,00</a>
+          <a href="https://pay.yampi.com.br/LINK_BASICO_AQUI" class="block text-[11px] text-gray-400 font-bold hover:text-gray-600 transition underline text-center">Não, obrigado. Vou ficar só com o guia inicial por R$ 17,00.</a>
       </div>
   </div>
 
@@ -298,7 +302,6 @@
               </p>
           </div>
           <div class="relative w-full flex justify-center items-center z-20 mt-2 shrink-0">
-              <!-- IMAGEM REDIMENSIONADA (+25% em relação ao ajuste anterior) -->
               <img src="head1.webp" fetchpriority="high" decoding="async" alt="Brincos de Cerâmica Fria" class="w-[135%] max-w-[350px] h-auto object-contain blend-image">
           </div>
           <div class="w-full text-center z-30 -mt-10 flex flex-col items-center shrink-0">
@@ -452,8 +455,12 @@
           </div>
          
           <div class="w-full text-center z-30 mt-4 flex flex-col items-center shrink-0">
+              
+              <!-- ESPAÇO PARA PRODUTO ÂNCORA ANTES DO LUCRO -->
+              <img src="produto-ancora.webp" onerror="this.onerror=null;this.src='https://placehold.co/400x400/fdf2f8/be123c?text=Sua+Imagem:+produto-ancora.webp'" alt="Brinco de Luxo" class="w-40 h-40 object-cover rounded-full shadow-xl border-4 border-white mb-6 -mt-2 rotate-2">
+
               <p class="text-[15px] font-bold mb-6 leading-relaxed text-gray-700 px-4 text-center">
-                  O custo para produzir um brinco artesanal de cerâmica é <strong class="text-highlight">baixíssimo</strong> comparado ao valor de venda. Veja quanto você coloca no bolso:
+                  O custo para produzir um brinco artesanal de cerâmica como este acima é <strong class="text-highlight">baixíssimo</strong>. Veja quanto você coloca no bolso:
               </p>
 
               <!-- Calculadora Visual -->
@@ -662,6 +669,9 @@
               <div class="space-y-5 text-left px-1">
                   <!-- Bonus 1 -->
                   <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <!-- ESPAÇO PARA MOCKUP DO BONUS 1 -->
+                      <img src="mockup-bonus1.webp" onerror="this.onerror=null;this.src='https://placehold.co/400x250/fdf2f8/be123c?text=Sua+Imagem:+mockup-bonus1.webp'" alt="Pack Canva Embalagens" class="w-full h-32 object-cover rounded-xl mb-4 border border-gray-100">
+                      
                       <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #01</div>
                       <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Pack Canva: Tags e Embalagens</h4>
                       <p class="text-[13px] text-gray-600 leading-relaxed mb-5">Templates prontos e profissionais para você colocar sua marca e agregar valor ao brinco. Pareça uma marca gigante desde o seu primeiro dia de vendas.</p>
@@ -673,6 +683,9 @@
 
                   <!-- Bonus 2 -->
                   <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <!-- ESPAÇO PARA MOCKUP DO BONUS 2 -->
+                      <img src="mockup-bonus2.webp" onerror="this.onerror=null;this.src='https://placehold.co/400x250/fdf2f8/be123c?text=Sua+Imagem:+mockup-bonus2.webp'" alt="Script WhatsApp" class="w-full h-32 object-cover rounded-xl mb-4 border border-gray-100">
+                      
                       <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #02</div>
                       <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Script de Vendas p/ WhatsApp</h4>
                       <p class="text-[13px] text-gray-600 leading-relaxed mb-5">O texto persuasivo exato para mandar nos grupos do condomínio, família e clientes. É só copiar, colar e ver os pedidos chegando.</p>
@@ -684,6 +697,9 @@
 
                   <!-- Bonus 3 -->
                   <div class="bg-white rounded-[1.25rem] p-6 shadow-sm border border-gray-200 relative">
+                      <!-- ESPAÇO PARA MOCKUP DO BONUS 3 -->
+                      <img src="mockup-bonus3.webp" onerror="this.onerror=null;this.src='https://placehold.co/400x250/fdf2f8/be123c?text=Sua+Imagem:+mockup-bonus3.webp'" alt="Calculadora de Lucro" class="w-full h-32 object-cover rounded-xl mb-4 border border-gray-100">
+                      
                       <div class="inline-block bg-gray-900 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">Bônus #03</div>
                       <h4 class="font-black text-[16px] text-gray-900 mb-2 leading-tight">Calculadora Automática de Lucro</h4>
                       <p class="text-[13px] text-gray-600 leading-relaxed mb-5">Chega de perder dinheiro chutando preço. Coloque o valor que você pagou nos materiais e a planilha te diz o preço de venda na hora.</p>
@@ -703,6 +719,9 @@
              
               <h4 class="text-[19px] font-black text-center mt-3 uppercase italic tracking-tighter text-gray-900">KIT ACELERADOR (GABARITOS + VÍDEOS)</h4>
              
+              <!-- ESPAÇO PARA MOCKUP DO VIP NO PLANO DE PREÇOS -->
+              <img src="mockup-vip.webp" onerror="this.onerror=null;this.src='https://placehold.co/500x350/10b981/white?text=Sua+Imagem:+mockup-vip.webp'" alt="Mockup VIP" class="w-full h-auto drop-shadow-xl mx-auto my-4 hover:scale-105 transition-transform">
+
               <div class="space-y-3 my-6 font-bold text-gray-700 text-[13px] text-left px-1">
                   <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>15 Gabaritos de Corte (Para Imprimir)</span></p>
                   <p class="flex items-start gap-2"><span class="text-[#10b981] text-lg leading-none">✔</span> <span>Vídeos Práticos (Sem enrolação)</span></p>
@@ -718,7 +737,7 @@
                   <p class="text-[13px] text-gray-400 line-through font-bold mb-1">de R$ 197,00 por</p>
                   <div class="flex items-center justify-center gap-1">
                       <span class="text-3xl font-black text-gray-900 self-start mt-1">R$</span>
-                      <span class="text-[4rem] font-black text-gray-900 leading-none tracking-tighter">27<span class="text-4xl">,90</span></span>
+                      <span class="text-[4rem] font-black text-gray-900 leading-none tracking-tighter">37<span class="text-4xl">,00</span></span>
                   </div>
                   <p id="countdown1" class="text-red-600 font-black text-[11px] mt-3 uppercase italic tracking-wider">Desconto válido por: 01:43</p>
               </div>
@@ -738,7 +757,7 @@
               </div>
           </div>
 
-          <!-- PLANO BÁSICO (R$ 14,90) - ESTRATÉGIA DE CONTRASTE -->
+          <!-- PLANO BÁSICO (R$ 17,00) - ESTRATÉGIA DE CONTRASTE -->
           <div class="bg-white rounded-[2rem] p-6 mb-4 shadow-md border-2 border-gray-100 text-gray-900 text-left">
               <h4 class="text-[16px] font-black text-center italic uppercase tracking-tighter text-gray-800">GUIA PRÁTICO INICIAL (TEXTO/PDF)</h4>
              
@@ -751,7 +770,7 @@
               </div>
              
               <div class="flex items-center justify-between gap-4 mt-4 border-t border-gray-100 pt-5">
-                  <span class="text-[28px] font-black text-gray-800 tracking-tighter">R$ 14,90</span>
+                  <span class="text-[28px] font-black text-gray-800 tracking-tighter">R$ 17,00</span>
                   <button onclick="showUpsellPopup()" class="px-5 py-3 bg-gray-50 text-gray-500 font-black text-[11px] rounded-xl uppercase hover:bg-gray-100 transition-colors shadow-sm border border-gray-200 tracking-wider">COMPRAR BÁSICO</button>
               </div>
           </div>
